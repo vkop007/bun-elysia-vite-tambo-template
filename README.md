@@ -4,193 +4,79 @@ A high-performance, full-stack starter template for building Generative AI appli
 
 ## ✨ Key Features
 
-- **⚡ Bun Monorepo**: Lightning-fast JavaScript runtime with built-in bundler and package manager
-- **🚀 Elysia.js Backend**: Performant, type-safe API with automatic validation and streaming support
-- **⚛️ Vite + React Frontend**: Lightning-fast HMR and optimized builds
-- **🎙️ Voice Input**: Native `useTamboVoice` hook for speech-to-text integration
-- **🧩 Generative Components**: Pre-built `SimpleChart` and `TodoList` with Tambo integration
-- **🔧 Tool Integration**: Seamless backend tool calls with automatic UI component rendering
-- **🎨 Polish UI**: Modern design system with smooth animations and responsive layout
-- **📦 Type-Safe**: Full TypeScript support with Zod schema validation
+- **⚡ Bun Monorepo**: Lightning-fast JavaScript runtime
+- **🚀 Elysia.js Backend**: Type-safe API with chart and todo endpoints
+- **⚛️ Vite + React Frontend**: Lightning-fast HMR
+- **🎙️ Voice Input**: Native `useTamboVoice` hook for speech-to-text
+- **🧩 Backend-Connected Components**: Chart and TodoList fetch from Elysia
+- **✨ Streaming Animations**: Items animate in with staggered effects
+- **🛡️ Graceful Error Handling**: Friendly setup when API key missing
+- **📦 Type-Safe**: Full TypeScript support with Zod validation
 
-## 🎯 Perfect For
+## 🎯 Architecture
 
-- Building AI assistants with generative UIs
-- Rapid prototyping of AI features
-- Learning how to integrate Tambo with modern tech stacks
-- Production-ready AI applications
+```
+User → Tambo React → AI renders component → Component fetches from Elysia backend
+```
+
+**Example**: "Show me a sales chart" → Tambo renders `SimpleChart` → fetches data from `/api/chart`
 
 ## 🛠️ Quick Start
 
-### Prerequisites
-
-- [Bun](https://bun.sh) v1.0+ installed
-- [Tambo API Key](https://tambo.co/dashboard) (free)
-
-### Installation
-
-1. **Clone and install dependencies**:
-   ```bash
-   git clone <this-repo>
-   cd bun-elysia-vite-tambo-template
-   bun install
-   ```
-
-2. **Configure environment**:
-   ```bash
-   cp .env.example .env
-   ```
-   Add your credentials:
-   ```env
-   # Backend API Key
-   TAMBO_API_KEY=your_key_here
-   
-   # Frontend Public Key
-   VITE_TAMBO_API_KEY=your_key_here
-   ```
-
-3. **Run development servers**:
-   ```bash
-   bun dev
-   ```
-   - **Frontend**: http://localhost:5173
-   - **Backend**: http://localhost:3000
+1. **Install**: `bun install`
+2. **Configure**: Copy `.env.example` to `.env` and add your `VITE_TAMBO_API_KEY`
+3. **Run**: `bun dev` (Frontend: :5173, Backend: :3000)
 
 ## 📁 Project Structure
 
 ```
-bun-elysia-vite-tambo-template/
-├── apps/
-│   ├── server/               # Elysia.js backend
-│   │   ├── src/
-│   │   │   └── index.ts     # API routes, tools, and Tambo integration
-│   │   └── package.json
-│   │
-│   └── web/                  # Vite + React frontend
-│       ├── src/
-│       │   ├── App.tsx              # Main chat interface
-│       │   ├── components/
-│       │   │   ├── DictationButton.tsx   # Voice input
-│       │   │   ├── SimpleChart.tsx       # Chart component
-│       │   │   └── TodoList.tsx          # Todo component
-│       │   ├── tambo/
-│       │   │   └── registry.ts      # Component & tool registration
-│       │   └── index.css
-│       ├── index.html
-│       ├── vite.config.ts
-│       └── package.json
-│
-├── .env.example              # Environment template
-├── package.json              # Monorepo root
-└── README.md                 # This file
+apps/
+├── server/src/
+│   ├── index.ts      # API routes
+│   └── handlers.ts   # Chart & todo handlers
+└── web/src/
+    ├── components/   # SimpleChart, TodoList, ApiKeyError
+    └── tambo/        # Provider & registry
 ```
 
-## 🎤 Voice Input Feature
+## 🔌 Backend Endpoints
 
-The template includes native voice-to-text using `useTamboVoice`:
+| Endpoint                   | Method | Description                   |
+| -------------------------- | ------ | ----------------------------- |
+| `/api/chart?topic=<topic>` | GET    | Generate chart data for topic |
+| `/api/todos?listId=<id>`   | GET    | Fetch saved todos             |
+| `/api/todos`               | POST   | Save todos to server          |
 
-```tsx
-import { useTamboVoice, useTamboThreadInput } from "@tambo-ai/react";
+## 🧩 Components
 
-export default function DictationButton() {
-  const { startRecording, stopRecording, isRecording, transcript } = useTamboVoice();
-  const { setValue } = useTamboThreadInput();
+### SimpleChart (Backend-Integrated)
 
-  return (
-    <button onClick={isRecording ? stopRecording : startRecording}>
-      {isRecording ? "Stop" : "Start"}
-    </button>
-  );
-}
+Fetches data from `/api/chart` based on topic.
+
+```
+Try: "Show me a chart of user growth"
 ```
 
-## 🧩 Adding Custom Components
+### TodoList (Backend-Persisted)
 
-1. **Create a new component** in `apps/web/src/components/`:
+Items saved to backend with "Saving..." indicator. Staggered animations.
 
-```tsx
-// MyComponent.tsx
-export function MyComponent(props: { title: string; data: any[] }) {
-  return <div>{props.title}</div>;
-}
+```
+Try: "Create a todo list for my project launch"
 ```
 
-2. **Register it** in `apps/web/src/tambo/registry.ts`:
+## 🚨 Troubleshooting
 
-```typescript
-import { MyComponent } from "../components/MyComponent";
+**"API Key Missing"** - Add `VITE_TAMBO_API_KEY` to `.env` and restart
 
-export const components: TamboComponent[] = [
-  {
-    name: "myComponent",
-    component: MyComponent,
-    description: "A description for the AI to understand",
-    propsSchema: z.object({
-      title: z.string(),
-      data: z.array(z.any()),
-    }),
-  },
-  // ... existing components
-];
-```
-
-3. **Use it in your prompts**: "Create a MyComponent with title 'Hello' and some data"
-
-## 🔧 Adding Tools
-
-Tools are defined in `apps/server/src/index.ts`:
-
-```typescript
-const tools: TamboTool[] = [
-  {
-    name: "getWeather",
-    description: "Get weather for a location",
-    tool: (params: { city: string }) => {
-      return { temp: 72, condition: "sunny" };
-    },
-    inputSchema: z.object({
-      city: z.string(),
-    }),
-    outputSchema: z.object({
-      temp: z.number(),
-      condition: z.string(),
-    }),
-  },
-];
-```
+**Chart shows "Unable to load"** - Ensure backend is running on port 3000
 
 ## 📖 Documentation
 
-- **Tambo Docs**: https://docs.tambo.co/
-- **Elysia.js Docs**: https://elysiajs.com/
-- **Bun Docs**: https://bun.sh/docs
-- **Vite Docs**: https://vitejs.dev/
-
-## 🚀 Deployment
-
-### Frontend (Vercel, Netlify, etc.)
-
-```bash
-bun run build
-# Deploy the apps/web/dist folder
-```
-
-### Backend (Railway, Fly.io, Heroku, etc.)
-
-```bash
-bun run build
-# Deploy apps/server with bun runtime
-```
-
-## 📝 License
-
-MIT - Built for the Tambo Community
-
-## 🤝 Contributing
-
-We'd love your improvements! Open an issue or PR to help make this template even better.
+- [Tambo Docs](https://docs.tambo.co/)
+- [Elysia.js](https://elysiajs.com/)
+- [Bun](https://bun.sh/docs)
 
 ---
 
 **Happy building! 🚀**
-

@@ -7,27 +7,21 @@ export const components: TamboComponent[] = [
   {
     name: "chart",
     component: SimpleChart,
-    description: "A simple visual chart component for displaying data trends.",
+    description:
+      "Display a visual chart by fetching data from the Elysia backend. Use this for showing sales, revenue, users, growth, or any data trends.",
     propsSchema: z.object({
-      title: z.string().describe("The title of the chart"),
-      data: z
-        .array(
-          z.object({
-            label: z.string(),
-            value: z.number(),
-          }),
-        )
-        .describe("The data points for the chart"),
-      type: z
-        .enum(["bar", "line", "area"])
-        .default("bar")
-        .describe("The type of chart to render"),
+      topic: z
+        .string()
+        .describe(
+          "The topic to generate chart data for (e.g., 'sales', 'users', 'revenue', 'growth')",
+        ),
     }),
   },
   {
     name: "todo",
     component: TodoList,
-    description: "A todo list for managing tasks.",
+    description:
+      "Create and manage a todo list. Items are stored on the Elysia backend for persistence.",
     propsSchema: z.object({
       title: z.string().optional().describe("Title of the task list"),
       initialItems: z

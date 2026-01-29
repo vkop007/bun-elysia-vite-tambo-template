@@ -1,5 +1,12 @@
 import { useTambo, useTamboThreadInput } from "@tambo-ai/react";
-import { Sparkles, ArrowUpRight, User, ArrowLeft, Command, Mic } from "lucide-react";
+import {
+  Sparkles,
+  ArrowUpRight,
+  User,
+  ArrowLeft,
+  Command,
+  Mic,
+} from "lucide-react";
 import { FormEvent, Suspense } from "react";
 import DictationButton from "./components/DictationButton";
 
@@ -9,6 +16,23 @@ function App() {
 
   const messages = thread?.messages || [];
   const isLoading = !isIdle;
+  const generationStage = thread?.generationStage;
+
+  // Map generation stages to user-friendly labels
+  const stageLabels: Record<string, string> = {
+    IDLE: "Ready",
+    CHOOSING_COMPONENT: "Choosing component",
+    FETCHING_CONTEXT: "Fetching context",
+    HYDRATING_COMPONENT: "Preparing component",
+    STREAMING_RESPONSE: "Generating response",
+    COMPLETE: "Complete",
+    ERROR: "Error",
+    CANCELLED: "Cancelled",
+  };
+
+  const currentStageLabel = generationStage
+    ? stageLabels[generationStage] || generationStage
+    : null;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -38,7 +62,9 @@ function App() {
             <h1 className="text-lg font-semibold tracking-tight text-slate-900">
               Tambo + Elysia.js
             </h1>
-            <p className="text-xs text-slate-500">Full-stack starter with voice & components</p>
+            <p className="text-xs text-slate-500">
+              Full-stack starter with voice & components
+            </p>
           </div>
         </div>
       </div>
@@ -52,7 +78,8 @@ function App() {
                 What can I build for you?
               </h2>
               <p className="text-slate-500 text-base max-w-md mx-auto">
-                Ask me to create interactive components, visualize data, or manage tasks. Use your voice for hands-free input.
+                Ask me to create interactive components, visualize data, or
+                manage tasks. Use your voice for hands-free input.
               </p>
             </div>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -131,10 +158,28 @@ function App() {
                           )}
                         </div>
                       ))}
-                      {m.renderedComponent && (
-                        <div className="w-full border border-slate-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow p-4">
+                      {m.renderedComponent ? (
+                        <div className="w-full border border-slate-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden animate-in fade-in duration-300">
                           {m.renderedComponent}
                         </div>
+                      ) : (
+                        // Show loading when message has a tool call (component generation) but component not ready yet
+                        m.role === "assistant" &&
+                        isLoading &&
+                        m === messages[messages.length - 1] &&
+                        (m.toolCallRequest || m.component?.toolCallRequest) && (
+                          <div className="w-full border border-slate-200 rounded-xl bg-white shadow-sm p-6 flex items-center gap-3">
+                            <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm text-slate-500 font-medium">
+                              Generating{" "}
+                              {(
+                                m.toolCallRequest ||
+                                m.component?.toolCallRequest
+                              )?.toolName || "component"}
+                              ...
+                            </span>
+                          </div>
+                        )
                       )}
                     </div>
                   </div>
@@ -146,10 +191,11 @@ function App() {
                   <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-slate-200 shadow-sm">
                     <Sparkles className="h-4 w-4 text-slate-700 animate-pulse" />
                   </div>
-                  <div className="flex items-center gap-1 h-8">
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
+                  <div className="flex items-center gap-2 h-8">
+                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm text-slate-500 font-medium">
+                      {currentStageLabel || "Processing"}...
+                    </span>
                   </div>
                 </div>
               )}
@@ -166,7 +212,7 @@ function App() {
               onChange={(e) => setValue(e.target.value)}
               placeholder="Type or use voice input..."
               className="flex-1 text-slate-900 placeholder:text-slate-600 font-medium outline-none bg-transparent text-base"
-              style={{ color: 'rgb(15 23 42)' }}
+              style={{ color: "rgb(15 23 42)" }}
               autoFocus
             />
             <div className="flex items-center gap-1">
